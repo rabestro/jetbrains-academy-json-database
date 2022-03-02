@@ -1,19 +1,31 @@
 package server;
 
-import java.util.Scanner;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class Main {
 
-    public static void main(String[] args) {
-        var scanner = new Scanner(System.in);
+    public static void main(String[] args) throws IOException {
+        System.out.println("Server started!");
 
-        var broker = new Broker(new Repository());
+        String address = "127.0.0.1";
+        int port = 23456;
+        ServerSocket server = new ServerSocket(port, 50, InetAddress.getByName(address));
+        try (Socket socket = server.accept()) {
+            DataInputStream input = new DataInputStream(socket.getInputStream());
+            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
 
-        Stream.generate(scanner::nextLine)
-                .takeWhile(Predicate.not("exit"::equals))
-                .map(broker)
-                .forEach(System.out::println);
+            var text = input.readUTF();
+            System.out.println("Received: " + text);
+
+            text = "A record # 12 was sent!";
+            output.writeUTF(text);
+            System.out.println("Sent: " + text);
+        }
+
     }
 }
